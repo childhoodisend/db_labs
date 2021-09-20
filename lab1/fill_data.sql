@@ -1,6 +1,7 @@
 TRUNCATE TABLE Chessboard;
 TRUNCATE TABLE Chessman CASCADE;
 ALTER SEQUENCE chessman_cid_seq RESTART WITH 1;
+ALTER SEQUENCE chessboard_uid_seq RESTART WITH 1;
 
 
 INSERT INTO Chessman (type, color) VALUES

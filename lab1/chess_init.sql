@@ -13,11 +13,12 @@ CREATE TABLE IF NOT EXISTS Chessman
 
 CREATE TABLE IF NOT EXISTS Chessboard
 (
+    uid serial NOT NULL PRIMARY KEY,
 	cid smallint NOT NULL REFERENCES Chessman (cid),
     x char NOT NULL,
     y smallint NOT NULL,
     CONSTRAINT x_chk CHECK (x in ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h')),
     CONSTRAINT y_chk CHECK (y in (1, 2, 3, 4, 5, 6, 7, 8)),
-	UNIQUE(x, y, cid)
+	UNIQUE(cid, x, y)
 );
 
