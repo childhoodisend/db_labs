@@ -106,7 +106,7 @@ SELECT count(*) AS exact_count FROM Chessboard;
 
 -- 2. Вывести id фигур, чьи названия начинаются на букву k. 
 SELECT cid AS id_starting_k FROM Chessman 
-WHERE (substring(type,1,1) = 'k');
+WHERE LEFT(type,1) = 'k';
 
 
 -- 3. Какие типы фигур бывают и по сколько штук? Вывести тип и количество. 
@@ -120,16 +120,16 @@ FROM Chessboard JOIN Chessman ON Chessboard.cid = Chessman.cid
 WHERE Chessman.color = 'white';
 
 -- 5. Какие фигуры стоят на главной диагонали? Вывести их тип и цвет.
-SELECT type, color FROM Chessman 
-WHERE cid in 
-(SELECT cid FROM Chessboard WHERE (x, y) in
- (('a', 1), ('b', 2), ('c', 3), ('d', 4), ('e', 5), ('f', 6), ('g', 7), ('h', 8)));
- 
- 
--- 6. Найдите общее количество фигур, оставшихся у каждого игрока. Вывести цвет и количество. 
-SELECT Chessman.type, Chessman.color, COUNT(*) 
+
+SELECT color, type
 FROM Chessboard JOIN Chessman ON Chessboard.cid = Chessman.cid
-GROUP BY Chessman.type, Chessman.color;
+WHERE  ASCII(x) - 96 = y;
+
+
+-- 6. Найдите общее количество фигур, оставшихся у каждого игрока. Вывести цвет и количество. 
+SELECT  Chessman.color, COUNT(*) 
+FROM Chessboard JOIN Chessman ON Chessboard.cid = Chessman.cid
+GROUP BY Chessman.color;
 
 
 -- 7. Какие фигуры черных имеются на доске? Вывести тип. 
@@ -153,12 +153,17 @@ GROUP BY Chessman.type HAVING Count(*) > 1;
 SELECT Chessman.color
 FROM Chessboard JOIN Chessman ON Chessboard.cid = Chessman.cid
 GROUP BY Chessman.color
-ORDER BY COUNT(*) DESC
-LIMIT 1
+ORDER BY COUNT(*) DESC 
+FETCH FIRST 1 ROWS WITH TIES;
 
 -- 11. Найдите фигуры, которые стоят на возможном пути движения ладьи (rock) (Любой ладьи любого цвета). (Ладья может двигаться по горизонтали или по вертикали относительно своего положения на доске в любом направлении.).  
 
 -- 12. У каких игроков (цвета) еще остались ВСЕ пешки (pawn)? 
 
 -- 13. Пусть отношения board1 и board2 представляют собой два последовательных состояние игры (Chessboard). Какие фигуры (cid) изменили свою позицию (за один ход это может быть передвигаемая фигура и возможно еще фигура, которая была “съедена”)? 
+
+
+
+
+
 
