@@ -55,6 +55,7 @@ select distinct firstname from customers;
 
 
 -- 15 Найти однофамильцев среди продавцов
+SELECT lastname, count(*) FROM employees group by lastname HAVING count(*) > 1;
 
 
 
