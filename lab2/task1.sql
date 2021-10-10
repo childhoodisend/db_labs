@@ -60,7 +60,8 @@ SELECT lastname, count(*) FROM employees group by lastname HAVING count(*) > 1;
 
 
 -- 16 Найти продажи продавца по имени Ann
-
+select * from sales join employees as empl on empl.firstname = 'Ann';
 
 
 -- 17 Вывести названия товаров, которые продает Ann
+select name from products where productid in (select productid from sales join employees as empl on empl.firstname = 'Ann');
