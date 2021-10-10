@@ -50,7 +50,14 @@ select color from chessboard join chessman on chessboard.cid = chessman.cid grou
 
 
 -- 13 Пусть отношения board1 и board2 представляют собой два последовательных состояние игры (Chessboard). Какие фигуры (cid) изменили свою позицию (за один ход это может быть передвигаемая фигура и возможно еще фигура, которая была “съедена”)?
-
+DROP TABLE IF EXISTS board1, board2;
+SELECT * INTO board1 FROM chessboard;
+SELECT * INTO board2 FROM chessboard;
+DELETE FROM board2 WHERE cid = 11 and (x, y) = ('a', 7); -- pawn black delete
+UPDATE board2 SET y = 7 WHERE x = 'a' and cid = 6; -- rock black move to ('a', 7)
+SELECT * FROM board1;
+SELECT * from board2;
+DROP TABLE board1, board2;
 
 -- 14 Вывести id фигуры, если она стоит в «опасной близости» от черного короля? «опасной близостью» будем считать квадрат 5х5 с королем в центре.
 select uid from chessboard join chessman on chessboard.cid = chessman.cid where
@@ -68,5 +75,11 @@ AND
 
 
 -- 15 Найти фигуру, ближе всех стоящую к белому королю (расстояние считаем по метрике L1 – разница координат по X + разница координат по Y.
+drop table if exists all_info;
+select chessboard.cid, x, y, color, type into all_info from (chessboard join chessman on chessboard.cid = chessman.cid);
+select * from all_info; -- create all info table
 
+select ai1.cid FROM all_info as ai1, all_info as ai2 where ai2.type = 'king' AND ai2.color = 'white' AND ABS(ai1.y - ai2.y) + ABS(ASCII(ai1.x) - ASCII(ai2.x)) =
+(select MIN(ABS(ai1.y - ai2.y) + ABS(ASCII(ai1.x) - ASCII(ai2.x))) from all_info as ai1, all_info as ai2 where (ai2.type = 'king' and ai2.color = 'white') and (ai1.type != 'king' or ai1.color != 'white'));
 
+drop table all_info;

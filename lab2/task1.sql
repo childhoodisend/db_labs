@@ -1,0 +1,1 @@
+CREATE TABLESPACE dbspace LOCATION '/home/pahpan/Rep/db_labs/data/CreditBackup80.BAK';
