@@ -79,11 +79,26 @@ select AVG(price) from sales join products p on sales.productid = p.productid;
 
 
 -- 21 Какова сумма продаж у каждого продавца?
+-- create idx's ?
 select sales.salespersonid, SUM(price) from sales join products p on sales.productid = p.productid group by salespersonid;
 
 
 -- 22 Для каждого товара найти мат.ожидание количества в каждой продаже и среднее квадратичное отклонение.
+drop view if exists E cascade;
+create view E as (select sales.productid, sum(sales.quantity)/count(sales.productid) as mean from sales join products as p on sales.productid = p.productid group by sales.productid);
+
+select salesid, E.mean, sum((E.mean - sales.quantity)*(E.mean - sales.quantity))/count(sales.productid) as D from E join sales on E.productid = sales.salesid
+group by salesid, E.mean;
+
 
 -- 23 Вывести информацию о продажах, в котором будут фамилии и имена продавцов, покупателей, название товаров, количество товаров,  цена за единицу и общая сумма продажи.
+select salesid, e.firstname , e.lastname, c.firstname, c.lastname, p.price, sum(quantity*price)
+from sales as s
+    join products  p on s.productid  = p.productid
+    join customers c on s.customerid = c.customerid
+    join employees e on s.salesid    = e.employeeid
+group by salesid, e.firstname, salesid, e.lastname, c.firstname, c.lastname, p.price;
+
 
 -- 24 Для всех продаж для каждого покупателя добавить  с помощью оконной функции общее количество купленных товаров за все время, и пронумеровать каждую покупку для каждого покупателя, начиная с 1.
+select firstname, salesid, row_number() over () from sales join customers c on sales.customerid = c.customerid;
