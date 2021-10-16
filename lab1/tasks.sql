@@ -204,5 +204,41 @@ update chessboard set x = 'a', y = 2 where uid = 17; -- return pawn to start poi
 
 -- 3 Триггер2 – вести файл, в который записываются все ходы.
 
+CREATE TABLE IF NOT EXISTS LOGTABLE
+(
+    cid smallint NOT NULL,
+    x_old char NOT NULL,
+    x_new char NOT NULL,
+    y_old smallint NOT NULL,
+    y_new smallint NOT NULL,
+    CONSTRAINT x_old_chk CHECK (x_old in ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h')),
+    CONSTRAINT x_new_chk CHECK (x_new in ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h')),
+    CONSTRAINT y_old_chk CHECK (y_old in (1, 2, 3, 4, 5, 6, 7, 8)),
+    CONSTRAINT y_new_chk CHECK (y_new in (1, 2, 3, 4, 5, 6, 7, 8))
+);
 
+create or replace function logger() returns trigger
+language plpgsql as $$
+begin
+    if (new.x <> old.x and new.y <> old.y) then
+        insert into LOGTABLE (cid, x_old, x_new, y_old, y_new) values(old.cid, old.x, new.x, old.y, new.y);
+        return new;
+    end if;
+    if (new.x <> old.x) then
+        insert into LOGTABLE (cid, x_old, x_new, y_old, y_new) values(old.cid, old.x, new.x, old.y, old.y);
+        return new;
+    end if;
+    if (new.y <> old.y) then
+        insert into LOGTABLE (cid, x_old, x_new, y_old, y_new) values(old.cid, old.x, old.x, old.y, new.y);
+        return new;
+    end if;
+    return old;
 
+end;
+$$;
+
+create trigger log_update after update on chessboard for each row execute procedure logger();
+-- drop trigger if exists log_update on chessboard;
+
+update chessboard set x = 'a', y = 2 where uid = 17; -- return pawn to ('a', 2) point
+call pawn_move(cast(17 as smallint), cast('a' as char), cast(3 as smallint)); --pawn (a, 2) -> (a, 3)
