@@ -83,3 +83,113 @@ select ai1.cid FROM all_info as ai1, all_info as ai2 where ai2.type = 'king' AND
 (select MIN(ABS(ai1.y - ai2.y) + ABS(ASCII(ai1.x) - ASCII(ai2.x))) from all_info as ai1, all_info as ai2 where (ai2.type = 'king' and ai2.color = 'white') and (ai1.type != 'king' or ai1.color != 'white'));
 
 drop table all_info;
+
+-- TASK 3
+
+-- 1 Процедура – «сделать ход». Параметры - идентификатор фигуры и новые координаты (для одного типа фигуры). Проверить, соответствует ли ход правилам, и если да, то сделать ход.
+
+
+create or replace function one_step_pawn(x_next char, y_next smallint) returns boolean
+language plpgsql
+as $$
+declare
+    figure_cid smallint = (select cid from chessboard as c where c.x = x_next and c.y = y_next);
+begin
+    if (figure_cid is null) then
+        return true;
+    else
+        return false;
+    end if;
+end;
+$$;
+
+create or replace function two_step_pawn(x_next char, y_next smallint) returns boolean
+language plpgsql
+as $$
+
+declare
+    figure_cid smallint = (select cid from chessboard as c where c.x = x_next and c.y = y_next);
+begin
+
+    if (one_step_pawn(x_next, cast(y_next - 1 as smallint)) and figure_cid is null) then
+        return true;
+    else
+        return false;
+    end if;
+
+end;
+$$;
+
+create or replace procedure pawn_move(_uid smallint, _x char, _y smallint)
+language plpgsql
+as $$
+declare
+    x_cur char = (select x from chessboard as c where c.uid = _uid);
+    y_cur smallint = (select y from chessboard as c where c.uid = _uid);
+    cid_cur smallint = (select cid from chessboard as c where c.uid = _uid);
+begin
+    if cid_cur in (11 , 12) then
+        if (x_cur = _x and abs(y_cur - _y) = 1) then
+            if (one_step_pawn( _x, _y)) then
+                update chessboard as c set x = _x, y = _y where c.x = x_cur and c.y = y_cur;
+            end if;
+        end if;
+        if (x_cur = _x and abs(y_cur - _y) = 2) then
+            if (two_step_pawn( _x, _y)) then
+                update chessboard as c set x = _x, y = _y where c.x = x_cur and c.y = y_cur;
+            end if;
+        end if;
+    else
+        raise notice 'is not pawn! ';
+    end if;
+end;
+$$;
+
+
+create or replace procedure pawn_eat(_uid smallint, _x char, _y smallint)
+language plpgsql
+as $$
+declare
+    color_enemy char(5) = (select color from chessboard c join chessman on chessman.cid = c.cid and c.x = _x and c.y = _y and c.uid <> _uid);
+    color_cur char(5) = (select color from chessboard c join chessman on chessman.cid = c.cid and c.x = _x and c.y = _y and c.uid = _uid);
+    x_cur char = (select x from chessboard as c where c.uid = _uid);
+    y_cur smallint = (select y from chessboard as c where c.uid = _uid);
+begin
+    if (color_enemy is not null) then
+        if (color_cur = color_enemy) then
+            raise notice 'the same colors! can not eat friend';
+            return;
+        else
+            if (ascii(x_cur) + 1 = ascii(_x) and y_cur + 1 = _y) then
+                delete from chessboard where x = _x and y = _y;
+                update chessboard as c set x = _x, y = _y where c.x = x_cur and c.y = y_cur;
+            end if;
+        end if;
+    else
+        raise notice 'nothing to eat';
+    end if;
+
+end;
+$$;
+
+
+
+-- simple move case:
+call pawn_move(cast(17 as smallint), cast('a' as char), cast(3 as smallint)); --pawn (a, 2) -> (a, 3)
+update chessboard set y = 2 where uid = 17; -- return pawn to start point
+drop procedure pawn_move(_uid smallint, _x char, _y smallint);
+drop function one_step_pawn(_uid smallint, x_prev char, y_prev smallint, x_next char, y_next smallint);
+drop function two_step_pawn(_uid smallint, x_prev char, y_prev smallint, x_next char, y_next smallint);
+
+
+-- eat case :
+insert into chessboard (cid, x, y) values (12, 'b', 4);
+call pawn_eat(cast(17 as smallint), cast('b' as char), cast(4 as smallint)); -- pawn (a, 3) eat pawn (b, 4)
+drop procedure pawn_eat(_uid smallint, _x char, _y smallint);
+
+-- 2 Триггер1 на изменение положения фигуры. Если мы ходим на клетку, где стоит фигура другого цвета, то «съесть» ее, если своего, то такой ход делать нельзя.
+
+-- 3 Триггер2 – вести файл, в который записываются все ходы.
+
+
+
