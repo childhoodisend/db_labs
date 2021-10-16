@@ -129,13 +129,13 @@ declare
     cid_cur smallint = (select cid from chessboard as c where c.uid = _uid);
 begin
     if cid_cur in (11 , 12) then
-        if (x_cur = _x and abs(y_cur - _y) = 1) then
+        if (x_cur = _x and y_cur + 1 = _y) then
             if (one_step_pawn( _x, _y)) then
                 update chessboard as c set x = _x, y = _y where c.x = x_cur and c.y = y_cur;
                 return;
             end if;
         end if;
-        if (x_cur = _x and abs(y_cur - _y) = 2) then
+        if (x_cur = _x and y_cur + 2 = _y) then
             if (two_step_pawn( _x, _y)) then
                 update chessboard as c set x = _x, y = _y where c.x = x_cur and c.y = y_cur;
                 return;
