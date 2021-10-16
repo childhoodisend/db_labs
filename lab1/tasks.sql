@@ -132,13 +132,21 @@ begin
         if (x_cur = _x and abs(y_cur - _y) = 1) then
             if (one_step_pawn( _x, _y)) then
                 update chessboard as c set x = _x, y = _y where c.x = x_cur and c.y = y_cur;
+                return;
             end if;
         end if;
         if (x_cur = _x and abs(y_cur - _y) = 2) then
             if (two_step_pawn( _x, _y)) then
                 update chessboard as c set x = _x, y = _y where c.x = x_cur and c.y = y_cur;
+                return;
             end if;
         end if;
+
+        if (ascii(x_cur) + 1 = ascii(_x) and y_cur + 1 = _y) then
+            call pawn_eat(cast(_uid as smallint), cast(_x as char), cast(_y as smallint));
+            return;
+        end if;
+
     else
         raise notice 'is not pawn! ';
     end if;
@@ -175,17 +183,22 @@ $$;
 
 
 -- simple move case:
+insert into chessboard (cid, x, y) values (12, 'b', 4);
 call pawn_move(cast(17 as smallint), cast('a' as char), cast(3 as smallint)); --pawn (a, 2) -> (a, 3)
-update chessboard set y = 2 where uid = 17; -- return pawn to start point
-drop procedure pawn_move(_uid smallint, _x char, _y smallint);
-drop function one_step_pawn(_uid smallint, x_prev char, y_prev smallint, x_next char, y_next smallint);
-drop function two_step_pawn(_uid smallint, x_prev char, y_prev smallint, x_next char, y_next smallint);
+call pawn_move(cast(17 as smallint), cast('b' as char), cast(4 as smallint)); --pawn (a, 2) -> (a, 3)
+update chessboard set x = 'a', y = 2 where uid = 17; -- return pawn to start point
+
+
+-- drop procedure pawn_move(_uid smallint, _x char, _y smallint);
+-- drop function one_step_pawn(_uid smallint, x_prev char, y_prev smallint, x_next char, y_next smallint);
+-- drop function two_step_pawn(_uid smallint, x_prev char, y_prev smallint, x_next char, y_next smallint);
 
 
 -- eat case :
-insert into chessboard (cid, x, y) values (12, 'b', 4);
-call pawn_eat(cast(17 as smallint), cast('b' as char), cast(4 as smallint)); -- pawn (a, 3) eat pawn (b, 4)
-drop procedure pawn_eat(_uid smallint, _x char, _y smallint);
+insert into chessboard (cid, x, y) values (12, 'b', 3);
+call pawn_eat(cast(17 as smallint), cast('b' as char), cast(3 as smallint)); -- pawn (a, 3) eat pawn (b, 4)
+update chessboard set x = 'a', y = 2 where uid = 17; -- return pawn to start point
+-- drop procedure pawn_eat(_uid smallint, _x char, _y smallint);
 
 -- 2 Триггер1 на изменение положения фигуры. Если мы ходим на клетку, где стоит фигура другого цвета, то «съесть» ее, если своего, то такой ход делать нельзя.
 
