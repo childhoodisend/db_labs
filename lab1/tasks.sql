@@ -200,7 +200,35 @@ call pawn_eat(cast(17 as smallint), cast('b' as char), cast(3 as smallint)); -- 
 update chessboard set x = 'a', y = 2 where uid = 17; -- return pawn to start point
 -- drop procedure pawn_eat(_uid smallint, _x char, _y smallint);
 
+
 -- 2 Триггер1 на изменение положения фигуры. Если мы ходим на клетку, где стоит фигура другого цвета, то «съесть» ее, если своего, то такой ход делать нельзя.
+create or replace function pawn_triggered() returns trigger as
+$$
+declare
+    pawn_clr char(5);
+begin
+    RAISE NOTICE 'trigger worked';
+    RAISE NOTICE 'found change in % % %',new.cid, new.x, new.y ;
+select color into pawn_clr from chessman where chessman.cid = cid;
+case
+    when exists (select c.cid from chessboard as c join chessman as ch on c.cid = ch.cid where  c.x = new.x and c.y = NEW.y and c.cid != new.cid and ch.color != pawn_clr) then
+        raise notice 'enemy!';
+        delete from chessboard as r WHERE r.x = NEW.x and r.y = new.y and r.cid != new.cid;
+        return new;
+    when exists (select c.cid FROM chessboard as c join chessman as ch on c.cid = ch.cid where  c.x = new.x and c.y = new.y and c.cid != new.cid and ch.color = pawn_clr) then
+        raise notice 'not enemy!';
+        return old;
+    else
+        return new;
+end case;
+end;
+$$ language plpgsql;
+
+
+create trigger pawn_move before update on chessboard for each row when (old.x is distinct from new.x  or  old.y is distinct from new.y) execute procedure pawn_triggered();
+-- drop trigger if exists pawn_move on chessboard;
+call pawn_move(cast(17 as smallint), cast('a' as char), cast(3 as smallint)); --pawn (a, 2) -> (a, 3)
+update chessboard set x = 'a', y = 2 where uid = 17; -- return pawn to start point
 
 -- 3 Триггер2 – вести файл, в который записываются все ходы.
 
