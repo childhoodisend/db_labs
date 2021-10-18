@@ -219,6 +219,7 @@ case
         raise notice 'not enemy!';
         return old;
     else
+        raise notice 'move';
         return new;
 end case;
 end;
