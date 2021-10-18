@@ -207,8 +207,8 @@ $$
 declare
     pawn_clr char(5);
 begin
-    RAISE NOTICE 'trigger worked';
-    RAISE NOTICE 'found change in % % %',new.cid, new.x, new.y ;
+    raise notice 'pawn_triggered';
+
 select color into pawn_clr from chessman where chessman.cid = cid;
 case
     when exists (select c.cid from chessboard as c join chessman as ch on c.cid = ch.cid where  c.x = new.x and c.y = NEW.y and c.cid != new.cid and ch.color != pawn_clr) then
