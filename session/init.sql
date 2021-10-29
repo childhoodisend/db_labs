@@ -19,7 +19,9 @@ create table if not exists students
     book int not null,              -- зачетная книжка
     group_id int not null,          -- номер группы
 
-    unique (id, book, group_id)
+    unique (id, book, group_id),
+    unique (id, group_id),
+    unique (id)
 );
 
 
@@ -32,7 +34,9 @@ create table if not exists results
     is_required bool not null default false,
 
     constraint status_chk check (status in ('passed', 'failed', 'need')),
-    constraint attempt_chk check (attempt in (1, 2, 3))
+    constraint attempt_chk check (attempt in (1, 2, 3)),
+
+    unique (student_id, subject_id, attempt)
 );
 
 create table if not exists dependencies
@@ -40,4 +44,13 @@ create table if not exists dependencies
 	subject_id int not null references subjects(id),
 	depends_of int not null references subjects(id),
 	is_required bool not null default false
+);
+
+create table if not exists group_subj
+(
+    group_id int not null,
+    subject_id int not null references subjects(id),
+    is_required bool not null default false,
+
+    constraint group_chk check ( group_id in (431, 433, 244, 1))
 );
