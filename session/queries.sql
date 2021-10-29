@@ -43,10 +43,7 @@ select subject_id, count(*) as cnt from results where status='failed' and is_req
 
 -- 10 Проверить, есть ли в базе студент, не допущенный ни к одному обязательному для его группы экзамену.
 
-create or replace view exam_failed as (select student_id, count(*) as cnt from results join subjects s on results.subject_id = s.id where type = 'exam' and results.status = 'failed' group by student_id);
-select students.id from students where id in (select student_id from exam_failed);
+create or replace view exam_failed as (select student_id, count(*) as cnt from results join subjects s on results.subject_id = s.id where type = 'exam' and (results.status in ('failed','need'))  group by student_id);
+create or replace view group_exam_cnt as (select group_id, count(*) as exam_cnt from group_subj join subjects s on group_subj.subject_id = s.id where type='exam' group by group_id);
 
-select (select count(*) as cnt from students) - (select count(distinct students.id) as cnt_std from students
-    join group_subj on students.group_id = group_subj.group_id
-    join subjects s on group_subj.subject_id = s.id
-    where s.type = 'exam' and group_subj.is_required = true);
+select student_id from exam_failed inner join group_exam_cnt on cnt = exam_cnt;

@@ -130,7 +130,11 @@ insert into students (firstname, middle_name, lastname, book, group_id) values
 
 insert into students (id, firstname, middle_name, lastname, book, group_id) values (25, 'Artem', 'Satanovsky', 'Dmitrievich', 123123, 1);
 insert into results (student_id, subject_id, attempt, status, is_required) values (25, 18, '1', 'failed', true);
+insert into results (student_id, subject_id, attempt, status, is_required) values (25, 4, '1', 'need', true);
+insert into dependencies(subject_id, depends_of, is_required) values (4, 18, true);
+
 insert into group_subj(group_id, subject_id, is_required) values (1, 18, true);
+insert into group_subj(group_id, subject_id, is_required) values (1, 4, true);
 
 insert into results (student_id, subject_id, attempt, status, is_required) values
 (12, 18, '2', 'need', 'false'),
@@ -458,7 +462,6 @@ insert into group_subj(group_id, subject_id, is_required) values
 (244, 6, 'true'),
 (433, 99, 'false'),
 (431, 16, 'false'),
-(431, 90, 'false'),
 (431, 93, 'false'),
 (433, 17, 'true'),
 (431, 54, 'true'),
@@ -476,7 +479,6 @@ insert into group_subj(group_id, subject_id, is_required) values
 (433, 87, 'false'),
 (433, 33, 'false'),
 (431, 87, 'true'),
-(433, 9, 'false'),
 (433, 22, 'true'),
 (244, 73, 'false'),
 (433, 96, 'false'),
@@ -494,16 +496,12 @@ insert into group_subj(group_id, subject_id, is_required) values
 (431, 51, 'false'),
 (431, 13, 'false'),
 (431, 61, 'false'),
-(433, 66, 'false'),
-(244, 73, 'false'),
 (244, 27, 'true'),
 (433, 56, 'false'),
 (431, 67, 'true'),
 (431, 41, 'false'),
-(433, 17, 'false'),
 (244, 5, 'false'),
 (433, 62, 'false'),
-(431, 30, 'false'),
 (433, 52, 'true'),
 (433, 49, 'false'),
 (431, 86, 'false'),
@@ -513,20 +511,16 @@ insert into group_subj(group_id, subject_id, is_required) values
 (433, 19, 'false'),
 (433, 6, 'false'),
 (431, 4, 'true'),
-(431, 48, 'false'),
 (433, 2, 'true'),
 (431, 72, 'false'),
 (431, 79, 'true'),
 (431, 10, 'true'),
 (433, 1, 'true'),
-(244, 90, 'true'),
 (244, 64, 'true'),
 (431, 22, 'true'),
 (431, 8, 'false'),
-(433, 17, 'false'),
 (433, 75, 'true'),
 (431, 52, 'true'),
-(244, 92, 'false'),
 (431, 53, 'true'),
 (244, 54, 'true'),
 (431, 29, 'true'),

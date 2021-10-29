@@ -52,5 +52,7 @@ create table if not exists group_subj
     subject_id int not null references subjects(id),
     is_required bool not null default false,
 
-    constraint group_chk check ( group_id in (431, 433, 244, 1))
+    constraint group_chk check ( group_id in (431, 433, 244, 1)),
+    unique (group_id, subject_id),
+    unique (group_id, subject_id, is_required)
 );
