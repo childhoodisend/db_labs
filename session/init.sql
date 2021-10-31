@@ -43,8 +43,14 @@ create table if not exists dependencies
 (
 	subject_id int not null references subjects(id),
 	depends_of int not null references subjects(id),
-	is_required bool not null default false
+	is_required bool not null default false,
+
+    unique(subject_id, depends_of, is_required)
 );
+
+ALTER TABLE dependencies
+ADD CONSTRAINT unique_trio UNIQUE (subject_id, depends_of, is_required);
+
 
 create table if not exists group_subj
 (
@@ -56,3 +62,5 @@ create table if not exists group_subj
     unique (group_id, subject_id),
     unique (group_id, subject_id, is_required)
 );
+ALTER TABLE group_subj
+add CONSTRAINT group_chk check (group_id in (431, 433, 244, 1, 228, 229));
