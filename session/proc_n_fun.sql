@@ -59,22 +59,36 @@ select add_exam('TEST EXAM 1', 'TEST CREDIT 1');
 
 
 -- #2
-create or replace function transfer(book int, group_id_last int, group_id_new int) returns table(subject_id int) as $$
+-- Написать функцию для перевода студента из группы в группу.
+-- Функция должна вернуть таблицу из экзаменов, которые необходимо сдать студенту, чтобы ликвидировать разницу в программе.
+-- Входные параметры: номер зачетной книжки студента, старый и новый номера группы. Студент может быть переведен из группы
+-- в группу, если разница в программе (количество обязательных семинаров и экзаменов для новой группы по сравнению с
+-- количеством обязательных семинаров и экзаменов в старой) составляет не более 10% от общего количества семинаров и
+-- экзаменов новой группы. Если разница превышает этот порог, должно быть возвращено исключение.
+
+create or replace function transfer(book_ int, group_id_last int, group_id_new int) returns table(subject_id int) as $$
 declare
     cnt_same_subj int = (select count(distinct group_subj.subject_id) from group_subj where group_id in (group_id_last, group_id_new) and is_required=true);
     cnt_subj_new_all int = (select count(group_subj.subject_id) from group_subj where group_id in (group_id_new));
     cnt_subj_new_req int = (select count(group_subj.subject_id) from group_subj where group_id in (group_id_new) and is_required=true);
+    st_id int = (select id from students where students.book=book_);
 begin
-    if(abs(cnt_subj_new_req - cnt_same_subj) <= 0.1 * cnt_subj_new_all) then
-        raise notice 'OK';
-        return query (select group_subj.subject_id from group_subj where group_subj.subject_id not in (select group_subj.subject_id from group_subj where group_id=group_id_last and is_required=true) and group_id=group_id_new);
+    if(group_id_last in (select group_id from st_groups)) then
+        if(abs(cnt_subj_new_req - cnt_same_subj) <= 0.1 * cnt_subj_new_all) then
+            raise notice 'transfer() : can transfer';
+            update students set group_id = group_id_new where id = st_id;
+            return query (select group_subj.subject_id from group_subj where group_subj.subject_id not in (select group_subj.subject_id from group_subj where group_id=group_id_last and is_required=true) and group_id=group_id_new);
+        else
+            raise notice 'transfer() : can not transfer to (%)', group_id_new;
+        end if;
     else
-        raise notice 'can not transfer to (%)', group_id_new;
+        raise notice 'transfer() : group_id_new = (%) does not exist', group_id_last;
     end if;
+
 end;
 $$ language plpgsql;
 
-insert into students(id, firstname, middle_name, lastname, book, group_id) values (26, 'Test', 'Test', 'Test', 1488, 228); -- -> 229
+insert into students(id, firstname, middle_name, lastname, book, group_id) values (25, 'Test_transfer', 'Test_transfer', 'Test_transfer', 1488, 228); -- -> 229
 insert into group_subj(group_id, subject_id, is_required) values (228, 1, true), (228, 2, true), (228, 3, false);
 insert into group_subj(group_id, subject_id, is_required) values (229, 1, true), (229, 2, true), (229, 3, true), (229, 4, true);
 select transfer(1488, 228, 229);
