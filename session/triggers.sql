@@ -20,14 +20,20 @@ declare
     amount int = (select amount from exam_req_amount where subject_id=old.subject_id);
 
 begin
-    raise notice 'delete cnt_of_req [%] / amount [%]', cnt_of_req, amount;
-
-    if (amount < cnt_of_req) then
-        raise notice 'delete';
+    if (amount is null) then
+        raise notice 'delete_dep() amount is null';
         return old;
     else
-        raise notice 'skip';
-        return new;
+
+        raise notice 'delete_dep() delete cnt_of_req [%] / amount [%]', cnt_of_req, amount;
+        if (amount < cnt_of_req) then
+            raise notice 'delete_dep() delete';
+            return old;
+        else
+            raise notice 'delete_dep() skip';
+            return new;
+        end if;
+
     end if;
 end;
 $tr$ language plpgsql;
