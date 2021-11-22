@@ -55,7 +55,7 @@ begin
     end if;
 end; $$ language plpgsql;
 
-select add_exam('TEST EXAM 1', 'TEST CREDIT 1');
+select add_exam('test_add_exam', 'test_add_exam');
 
 
 -- #2
@@ -93,34 +93,54 @@ insert into group_subj(group_id, subject_id, is_required) values (228, 1, true),
 insert into group_subj(group_id, subject_id, is_required) values (229, 1, true), (229, 2, true), (229, 3, true), (229, 4, true);
 select transfer(1488, 228, 229);
 
+-- Transferred student with 1488 book from 228 to 229 group
 
 -- #3
+-- Написать процедуру для перевода всех студентов, успешно сдавших все обязательные экзамены на следующий курс.
+-- Входные параметры: текущий номер группы, номер группы на следующем курсе.
+-- Выходной параметр: количество переведенных студентов.
+
+
 create or replace function check_passed(_group_id int, _new_group_id int) returns int as $$
 declare
     req_subj_cnt int = (select count(*) from group_subj where group_subj.group_id=_group_id and is_required=true);
     ids int[];
 begin
-    ids := array((select sic.student_id
-           from (select student_id, count(*) as cnt
-                 from results join students s on results.student_id = s.id
-                 where group_id = _group_id
-                   and results.status = 'passed'
-                   and results.is_required = true
-                 group by student_id) as sic where cnt=req_subj_cnt));
+    if(_group_id in (select group_id from st_groups)) then
+        ids := array((select sic.student_id
+               from (select student_id, count(*) as cnt
+                     from results join students s on results.student_id = s.id
+                     where group_id = _group_id
+                       and results.status = 'passed'
+                       and results.is_required = true
+                     group by student_id) as sic where cnt=req_subj_cnt));
 
-    for i in 1..array_length(ids, 1) loop
-        raise notice 'can not transfer to (%)', ids[i];
-        update students set group_id=_new_group_id where students.id=ids[i];
-    end loop;
-
-
-    return array_length(ids, 1);
+        if(array_length(ids,1) > 0) then
+        for i in 1..array_length(ids, 1) loop
+            raise notice 'check_passed() : transfer (%) from (%) to (%)', ids[i], _group_id, _new_group_id;
+            update students set group_id=_new_group_id where students.id=ids[i];
+        end loop;
+        return array_length(ids, 1);
+        else
+             raise notice 'check_passed() : array is empty';
+             return 0;
+        end if;
+    else
+        raise notice 'check_passed() : _group_id = (%) does not exist', _group_id;
+        return 0;
+    end if;
 end;
 $$ language plpgsql;
 
+insert into students(id, firstname, middle_name, lastname, book, group_id) values (26, 'Test_check_passed', 'Test_check_passed', 'Test_check_passed', 1489, 228);
+insert into students(id, firstname, middle_name, lastname, book, group_id) values (27, 'Test_check_passed', 'Test_check_passed', 'Test_check_passed', 1490, 228);
+insert into students(id, firstname, middle_name, lastname, book, group_id) values (28, 'Test_check_passed', 'Test_check_passed', 'Test_check_passed', 1491, 228);
 
-insert into students(id, firstname, middle_name, lastname, book, group_id) values (27, 'Test1', 'Test1', 'Test1', 1489, 228);
+
 insert into results(student_id, subject_id, attempt, status, is_required) values (26, 1, 1, 'passed', true), (26, 2, 1, 'passed', true);
 insert into results(student_id, subject_id, attempt, status, is_required) values (27, 1, 1, 'passed', true), (27, 2, 1, 'passed', true), (27, 3, 2, 'passed', false);
+insert into results(student_id, subject_id, attempt, status, is_required) values (28, 1, 1, 'failed', true), (28, 2, 1, 'failed', true);
+
 select check_passed(228, 333);
-drop function check_passed;
+
+-- 26, 27 were transferred, 28 was not
