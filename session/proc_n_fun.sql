@@ -1,25 +1,50 @@
 -- #1
+-- Написать функцию для занесения в базу данных информации об экзамене.
+-- Входные параметры: название экзамена, название семинара, который является необходимым для сдачи этого экзамена.
+-- Функция должна вернуть id нового экзамена, в случае если он был успешно создан.
+-- Перед добавлением экзамена необходимо проверить, занесена ли в базу информация о необходимом семинаре.
+-- В случае если нет – добавить сначала семинар. Добавить связь между экзаменом и семинаром в таблицу ExamRequirements1.
+
+
 create or replace function add_exam(_exam char(64), _credit char(64)) returns int as $$
 declare
     id_ex int;
     id_credit int;
-    exam_subj int = (select id from subjects where name=_exam);
-    credit_subj int = (select id from subjects where name=_credit);
-    depend_exam int = (select subject_id from dependencies join subjects on subjects.name = _exam);
-    depend_credit int = (select depends_of from dependencies join subjects on subjects.name = _credit);
+    exam_subj int = (select id from subjects where name=_exam and type='exam');
+    credit_subj int = (select id from subjects where name=_credit and type='credit');
+    depend_exam int = (select subject_id from dependencies join subjects on  subject_id=id and subjects.name = _exam);
+    depend_credit int = (select depends_of from dependencies join subjects on subject_id=id and subjects.name = _credit);
 begin
+    if(exam_subj is not null and credit_subj is not null) then
+        raise notice 'add_exam() exam_subj is not null and credit_subj is not null';
+        return exam_subj;
+    end if;
 
     if(exam_subj is null) then
+        raise notice 'add_exam() exam_subj is null';
         id_ex = (select count(*) from subjects) + 1;
         insert into subjects(id, name, type) values (cast(id_ex as int), _exam, 'exam');
     end if;
 
     if(credit_subj is null) then
+        raise notice 'add_exam() credit_subj is null';
         id_credit = (select count(*) from subjects) + 1;
         insert into subjects(id, name, type) values (cast(id_credit as int), _credit, 'credit');
     end if;
 
     if(depend_exam is null and depend_credit is null) then
+         raise notice 'add_exam() depend_exam is null and depend_credit is null';
+
+         if (id_ex is null) then
+             raise notice 'add_exam() id_ex is null';
+             id_ex = exam_subj;
+         end if;
+
+         if (id_credit is null) then
+             raise notice 'add_exam() id_credit is null';
+             id_credit = credit_subj;
+         end if;
+
         insert into dependencies(subject_id, depends_of, is_required) values (id_ex, id_credit, true);
     end if;
 
@@ -28,13 +53,9 @@ begin
     else
         return 0;
     end if;
+end; $$ language plpgsql;
 
-
-end;
-$$ language plpgsql;
-
-select add_exam('TEST EXAM', 'TEST CREDIT');
-
+select add_exam('TEST EXAM 1', 'TEST CREDIT 1');
 
 
 -- #2
