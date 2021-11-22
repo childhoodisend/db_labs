@@ -41,8 +41,12 @@ $tr$ language plpgsql;
 create trigger del_dep before delete on dependencies for each row execute procedure delete_dep();
 
 -- TEST
+insert into exam_req_amount(subject_id, amount) values (101, 2);
+
 insert into dependencies (subject_id, depends_of, is_required) values (101, 99, true);
-delete from dependencies where subject_id=101 and depends_of=102;
+insert into dependencies (subject_id, depends_of, is_required) values (101, 100, true);
+insert into dependencies (subject_id, depends_of, is_required) values (101, 101, true);
+delete from dependencies where subject_id=101 and depends_of=100;
 -- TEST
 
 
