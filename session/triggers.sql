@@ -11,7 +11,6 @@ create table if not exists exam_req_amount
 
   unique (subject_id, amount)
 );
-insert into exam_req_amount(subject_id, amount) values (53, 2);
 
 
 create or replace function delete_dep() returns trigger AS $tr$
