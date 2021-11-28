@@ -36,7 +36,7 @@ select count(distinct student_id) from students
     where s.type = 'credit' and gs.is_required = true and (r.status='failed' or r.status='need');
 
 -- 8 Найти самый «сложный» экзамен (с максимальным процентом не сдавших).
-select subject_id, count(*) as cnt from results where status='failed' group by subject_id order by cnt desc limit 1;
+select subject_id, (sum(cast(status = 'passed' as integer))) * 100 / (count(*)) as rate from results group by subject_id order by rate;
 
 -- 9 Полностью необязательные экзамены не рассматривать.
 select subject_id, count(*) as cnt from results where status='failed' and is_required=true group by subject_id order by cnt desc limit 1;
